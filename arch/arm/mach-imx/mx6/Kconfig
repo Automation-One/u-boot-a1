@@ -223,6 +223,14 @@ config TARGET_GW_VENTANA
 	imply CMD_SATA
 	imply CMD_SPL
 
+config TARGET_KONTRON_MX6UL
+	bool "Kontron Electronics N63xx/N64xx"
+	select DM
+	select DM_THERMAL
+	select MX6UL
+	select SUPPORT_SPL
+	imply CMD_DM
+
 config TARGET_KOSAGI_NOVENA
 	bool "Kosagi Novena"
 	select BOARD_LATE_INIT
@@ -638,6 +646,7 @@ source "board/el/el6x/Kconfig"
 source "board/embest/mx6boards/Kconfig"
 source "board/engicam/imx6q/Kconfig"
 source "board/engicam/imx6ul/Kconfig"
+source "board/kontron/imx/mx6ul/Kconfig"
 source "board/freescale/mx6qarm2/Kconfig"
 source "board/freescale/mx6memcal/Kconfig"
 source "board/freescale/mx6sabreauto/Kconfig"

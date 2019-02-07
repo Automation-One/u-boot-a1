@@ -636,7 +636,11 @@ dtb-$(CONFIG_MX6UL) += \
 	imx6ul-liteboard.dtb \
 	imx6ul-phycore-segin.dtb \
 	imx6ul-pico-hobbit.dtb \
-	imx6ul-pico-pi.dtb
+	imx6ul-pico-pi.dtb \
+	imx6ul-pico-pi.dtb \
+	imx6ul-kontron-n6310-s.dtb \
+	imx6ul-kontron-n6311-s.dtb \
+	imx6ull-kontron-n6411-s.dtb
 
 dtb-$(CONFIG_MX6ULL) += \
 	imx6ull-14x14-evk.dtb \

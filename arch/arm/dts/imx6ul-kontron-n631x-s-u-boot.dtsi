@@ -1,0 +1,19 @@
+// SPDX-License-Identifier: GPL-2.0 OR MIT
+/*
+ * Copyright (C) 2017 exceet electronics GmbH
+ * Copyright (C) 2018 Kontron Electronics GmbH
+ */
+
+/*
+ * To make both PHYs work, we need to set the reset pin once. Afterwards
+ * in Linux we can't assign the shared reset GPIO to the PHYs, as this
+ * would cause Linux to reset both PHYs every time one of them gets
+ * reinitialized.
+ */
+&fec1 {
+	phy-reset-gpios = <&gpio5 9 GPIO_ACTIVE_HIGH>;
+};
+
+&fec2 {
+	phy-reset-gpios = <&gpio5 9 GPIO_ACTIVE_HIGH>;
+};

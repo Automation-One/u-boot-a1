@@ -140,6 +140,15 @@ config FSL_DSPI
 	  this Freescale DSPI IP core. LS102xA and Colibri VF50/VF61 platforms
 	  use this driver.
 
+config FSL_QSPI
+	bool "Freescale QSPI driver"
+	depends on SPI_MEM
+	depends on DM_SPI
+	help
+	  Enable the Freescale QuadSPI (QSPI) driver. This driver uses the
+	  SPI MEM API to access different kind of memory devices connected to
+	  the FSL QSPI bus. Generic SPI messages are not supported.
+
 config ICH_SPI
 	bool "Intel ICH SPI driver"
 	imply SPI_FLASH_BAR
@@ -390,14 +399,6 @@ config FSL_ESPI
 	  Enable the Freescale eSPI driver. This driver can be used to
 	  access the SPI interface and SPI NOR flash on platforms embedding
 	  this Freescale eSPI IP core.
-
-config FSL_QSPI
-	bool "Freescale QSPI driver"
-	imply SPI_FLASH_BAR
-	help
-	  Enable the Freescale Quad-SPI (QSPI) driver. This driver can be
-	  used to access the SPI NOR flash on platforms embedding this
-	  Freescale IP core.
 
 config DAVINCI_SPI
 	bool "Davinci & Keystone SPI driver"

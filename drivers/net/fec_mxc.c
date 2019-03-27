@@ -1422,6 +1422,13 @@ static int fecmxc_probe(struct udevice *dev)
 	priv->dev_id = dev->seq;
 #ifdef CONFIG_FEC_MXC_MDIO_BASE
 	bus = fec_get_miibus((ulong)CONFIG_FEC_MXC_MDIO_BASE, dev->seq);
+#elif defined(CONFIG_DM_ETH) && \
+      (defined(CONFIG_MX6SX) || defined(CONFIG_MX6UL) || defined(CONFIG_MX6ULL))
+	if (ofnode_valid(dev_read_subnode(dev, "mdio")))
+		bus = fec_get_miibus((ulong)priv->eth, dev->seq);
+	else
+		bus = fec_get_miibus((ulong)priv->eth == ENET_BASE_ADDR ?
+				     ENET2_BASE_ADDR:ENET_BASE_ADDR, dev->seq);
 #else
 	bus = fec_get_miibus((ulong)priv->eth, dev->seq);
 #endif

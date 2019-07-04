@@ -55,26 +55,6 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_qspi>;
 	status = "okay";
-
-	spi-flash@0 {
-		#address-cells = <1>;
-		#size-cells = <1>;
-		compatible = "spi-nand";
-		spi-max-frequency = <108000000>;
-		spi-tx-bus-width = <4>;
-		spi-rx-bus-width = <4>;
-		reg = <0>;
-
-		partition@0 {
-			label = "ubi1";
-			reg = <0x00000000 0x08000000>;
-		};
-
-		partition@8000000 {
-			label = "ubi2";
-			reg = <0x08000000 0x08000000>;
-		};
-	};
 };
 
 &iomuxc {

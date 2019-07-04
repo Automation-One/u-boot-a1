@@ -35,11 +35,22 @@
  * ### RAM                             ###
  * #######################################
  */
+#ifdef CONFIG_IMX8M
+#define PHYS_SDRAM			DDR_CSD1_BASE_ADDR
+#define PHYS_SDRAM_SIZE			SZ_2G
+#define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM
+#else
 #define PHYS_SDRAM			MMDC0_ARB_BASE_ADDR
+#endif
 
+#ifdef CONFIG_IMX8M
+#define CONFIG_SYS_INIT_RAM_ADDR	0x40000000
+#define CONFIG_SYS_INIT_RAM_SIZE	0x80000
+#else
 #define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM
 #define CONFIG_SYS_INIT_RAM_ADDR	IRAM_BASE_ADDR
 #define CONFIG_SYS_INIT_RAM_SIZE	IRAM_SIZE
+#endif
 
 #define CONFIG_SYS_INIT_SP_OFFSET \
 	(CONFIG_SYS_INIT_RAM_SIZE - GENERATED_GBL_DATA_SIZE)

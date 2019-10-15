@@ -49,6 +49,14 @@ u32 spl_boot_device(void)
 	if (is_usbotg_phy_active())
 		return BOOT_DEVICE_BOARD;
 
+	/*
+	 * The manufacture mode allows to boot from MMC as a fallback.
+	 * In case the board has no boot config this is a common case,
+	 * so let's try to detect it.
+	 */
+	if (bmode == 1 && reg == 0)
+		return BOOT_DEVICE_MMC1;
+
 	/* BOOT_CFG1[7:4] - see IMX6DQRM Table 8-8 */
 	switch ((reg & IMX6_BMODE_MASK) >> IMX6_BMODE_SHIFT) {
 	 /* EIM: See 8.5.1, Table 8-9 */

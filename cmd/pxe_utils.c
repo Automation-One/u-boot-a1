@@ -1219,6 +1219,46 @@ struct pxe_menu *parse_pxefile(cmd_tbl_t *cmdtp, unsigned long menucfg)
 	return cfg;
 }
 
+#ifdef CONFIG_OF_CONTROL
+int pxe_match_menu_label_with_str(void *data, void *str)
+{
+	struct pxe_label *label;
+
+	if (!data || !str)
+		return 0;
+
+	label = (struct pxe_label *)data;
+
+	if (strcmp(label->name, str) == 0)
+		return 1;
+
+	return 0;
+}
+
+int pxe_runtime_select_menu_default(struct menu *m)
+{
+	DECLARE_GLOBAL_DATA_PTR;
+	const char *model;
+	char *key;
+	int ret;
+
+	model = fdt_getprop(gd->fdt_blob, 0, "model", NULL);
+
+	if (!model)
+		return 0;
+
+	ret = menu_set_default_by_item_data_match(m,
+			pxe_match_menu_label_with_str, (void *)model, &key);
+	if (ret)
+		return ret;
+
+	printf("Menu entry %s fits detected board. " \
+	       "Use as default selection...\n", key);
+
+	return 0;
+}
+#endif
+
 /*
  * Converts a pxe_menu struct into a menu struct for use with U-Boot's generic
  * menu code.
@@ -1257,6 +1297,8 @@ static struct menu *pxe_menu_to_menu(struct pxe_menu *cfg)
 	/*
 	 * After we've created items for each label in the menu, set the
 	 * menu's default label if one was specified.
+	 * If OF_CONTROL is enabled and we don't have a default specified,
+	 * we try to use an entry that matches the board/model name as default.
 	 */
 	if (default_num) {
 		err = menu_default_set(m, default_num);
@@ -1268,6 +1310,10 @@ static struct menu *pxe_menu_to_menu(struct pxe_menu *cfg)
 
 			printf("Missing default: %s\n", cfg->default_label);
 		}
+	} else if (IS_ENABLED(CONFIG_OF_CONTROL) &&
+		   pxe_runtime_select_menu_default(m)) {
+		menu_destroy(m);
+		return NULL;
 	}
 
 	return m;

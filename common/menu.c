@@ -161,6 +161,60 @@ static inline struct menu_item *menu_item_by_key(struct menu *m,
 }
 
 /*
+ * Find the first matching item, if any exists by calling a matching function
+ * on the items data field.
+ */
+static inline struct menu_item *menu_item_by_matching_fn(struct menu *m,
+			int match(void *, void *), void * extra)
+{
+	struct list_head *pos, *n;
+	struct menu_item *item;
+	int ret;
+
+	list_for_each_safe(pos, n, &m->items) {
+		item = list_entry(pos, struct menu_item, list);
+		if (item->key) {
+			ret = match(item->data, extra);
+			if (ret == 1)
+				return item;
+		}
+	}
+
+	return NULL;
+}
+
+/*
+ * menu_set_default_by_item_data_match() - sets a menu default option by calling
+ * a matching function on each of the menu items data field.
+ *
+ * m - Points to a menu created by menu_create().
+ *
+ * match - Points to a function that is passed a pointer to the items data field
+ *         and a pointer to extra data to compare with. It should return 1 on a
+ *         match.
+ *
+ * extra - Points to some data that is passed as a second parameter to the
+ *         matching function.
+ *
+ * key - Points to a char array that will be set to hold the key of the matched
+ *       menu item.
+ *
+ * Returns 0 if successful, or -ENOENT if no matching item was found.
+ */
+int menu_set_default_by_item_data_match(struct menu *m,
+			int match(void *, void *), void *extra, char **key)
+{
+	struct menu_item *item = menu_item_by_matching_fn(m, match, extra);
+
+	if (!item)
+		return -ENOENT;
+
+	*key = item->key;
+	m->default_item = item;
+	return 0;
+}
+
+/*
  * Set *choice to point to the default item's data, if any default item was
  * set, and returns 1. If no default item was set, returns -ENOENT.
  */

@@ -18,6 +18,9 @@ int menu_item_add(struct menu *m, char *item_key, void *item_data);
 int menu_destroy(struct menu *m);
 void menu_display_statusline(struct menu *m);
 int menu_default_choice(struct menu *m, void **choice);
+int menu_set_default_by_item_data_match(struct menu *m,
+					int match(void *, void *), void *extra,
+					char **key);
 
 /**
  * menu_show() Show a boot menu

@@ -3,6 +3,7 @@
  * Copyright (C) 2008, Guennadi Liakhovetski <lg@denx.de>
  */
 
+#include <clk.h>
 #include <common.h>
 #include <dm.h>
 #include <malloc.h>
@@ -54,6 +55,9 @@ struct mxc_spi_slave {
 	struct gpio_desc ss;
 	struct gpio_desc cs_gpios[MAX_CS_COUNT];
 	struct udevice *dev;
+#if CONFIG_IS_ENABLED(CLK)
+	struct clk per_clk;
+#endif
 };
 
 static inline struct mxc_spi_slave *to_mxc_spi_slave(struct spi_slave *slave)
@@ -117,7 +121,11 @@ static s32 spi_cfg_mxc(struct mxc_spi_slave *mxcs, unsigned int cs)
 	unsigned int max_hz = mxcs->max_hz;
 	unsigned int mode = mxcs->mode;
 
+#if CONFIG_IS_ENABLED(CLK)
+	clk_src = clk_get_rate(&mxcs->per_clk);
+#else
 	clk_src = mxc_get_clock(MXC_CSPI_CLK);
+#endif
 
 	div = DIV_ROUND_UP(clk_src, max_hz);
 	div = get_cspi_div(div);
@@ -149,13 +157,19 @@ static s32 spi_cfg_mxc(struct mxc_spi_slave *mxcs, unsigned int cs)
 #ifdef MXC_ECSPI
 static s32 spi_cfg_mxc(struct mxc_spi_slave *mxcs, unsigned int cs)
 {
-	u32 clk_src = mxc_get_clock(MXC_CSPI_CLK);
+	u32 clk_src;
 	s32 reg_ctrl, reg_config;
 	u32 ss_pol = 0, sclkpol = 0, sclkpha = 0, sclkctl = 0;
 	u32 pre_div = 0, post_div = 0;
 	struct cspi_regs *regs = (struct cspi_regs *)mxcs->base;
 	unsigned int max_hz = mxcs->max_hz;
 	unsigned int mode = mxcs->mode;
+
+#if CONFIG_IS_ENABLED(CLK)
+	clk_src = clk_get_rate(&mxcs->per_clk);
+#else
+	clk_src = mxc_get_clock(MXC_CSPI_CLK);
+#endif
 
 	/*
 	 * Reset SPI and set all CSs to master mode, if toggling
@@ -539,6 +553,19 @@ static int mxc_spi_probe(struct udevice *bus)
 
 	mxcs->max_hz = fdtdec_get_int(blob, node, "spi-max-frequency",
 				      20000000);
+
+#if CONFIG_IS_ENABLED(CLK)
+	ret = clk_get_by_name(bus, "per", &mxcs->per_clk);
+	if (ret) {
+		printf("Failed to get spi per clk\n");
+		return ret;
+	}
+	ret = clk_enable(&mxcs->per_clk);
+	if (ret) {
+		printf("Failed to enable spi per clk, ret: %d\n", ret);
+		return ret;
+	}
+#endif
 
 	return 0;
 }

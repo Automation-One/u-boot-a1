@@ -118,6 +118,15 @@ static const char *imx8mm_wdog_sels[] = {"clock-osc-24m", "sys_pll1_133m", "sys_
 static const char *imx8mm_usdhc3_sels[] = {"clock-osc-24m", "sys_pll1_400m", "sys_pll1_800m", "sys_pll2_500m",
 					   "sys_pll3_out", "sys_pll1_266m", "audio_pll2_clk", "sys_pll1_100m", };
 
+static const char *imx8mm_ecspi1_sels[] = {"clock-osc-24m", "sys_pll2_200m", "sys_pll1_40m", "sys_pll1_160m",
+					   "sys_pll1_800m", "sys_pll3_out", "sys_pll2_250m", "audio_pll2_out", };
+
+static const char *imx8mm_ecspi2_sels[] = {"clock-osc-24m", "sys_pll2_200m", "sys_pll1_40m", "sys_pll1_160m",
+					   "sys_pll1_800m", "sys_pll3_out", "sys_pll2_250m", "audio_pll2_out", };
+
+static const char *imx8mm_ecspi3_sels[] = {"clock-osc-24m", "sys_pll2_200m", "sys_pll1_40m", "sys_pll1_160m",
+					   "sys_pll1_800m", "sys_pll3_out", "sys_pll2_250m", "audio_pll2_out", };
+
 static ulong imx8mm_clk_get_rate(struct clk *clk)
 {
 	struct clk *c;
@@ -364,12 +373,27 @@ static int imx8mm_clk_probe(struct udevice *dev)
 	       imx8m_clk_composite("i2c3", imx8mm_i2c3_sels, base + 0xae00));
 	clk_dm(IMX8MM_CLK_I2C4,
 	       imx8m_clk_composite("i2c4", imx8mm_i2c4_sels, base + 0xae80));
+	clk_dm(IMX8MM_CLK_ECSPI1,
+	       imx8m_clk_composite("ecspi1", imx8mm_ecspi1_sels,
+				   base + 0xb280));
+	clk_dm(IMX8MM_CLK_ECSPI2,
+	       imx8m_clk_composite("ecspi2", imx8mm_ecspi2_sels,
+				   base + 0xb300));
 	clk_dm(IMX8MM_CLK_WDOG,
 	       imx8m_clk_composite("wdog", imx8mm_wdog_sels, base + 0xb900));
 	clk_dm(IMX8MM_CLK_USDHC3,
 	       imx8m_clk_composite("usdhc3", imx8mm_usdhc3_sels,
 				   base + 0xbc80));
+	clk_dm(IMX8MM_CLK_ECSPI3,
+	       imx8m_clk_composite("ecspi3", imx8mm_ecspi3_sels,
+				   base + 0xc180));
 
+	clk_dm(IMX8MM_CLK_ECSPI1_ROOT,
+	       imx_clk_gate4("ecspi1_root_clk", "ecspi1", base + 0x4070, 0));
+	clk_dm(IMX8MM_CLK_ECSPI2_ROOT,
+	       imx_clk_gate4("ecspi2_root_clk", "ecspi2", base + 0x4080, 0));
+	clk_dm(IMX8MM_CLK_ECSPI3_ROOT,
+	       imx_clk_gate4("ecspi3_root_clk", "ecspi3", base + 0x4090, 0));
 	clk_dm(IMX8MM_CLK_I2C1_ROOT,
 	       imx_clk_gate4("i2c1_root_clk", "i2c1", base + 0x4170, 0));
 	clk_dm(IMX8MM_CLK_I2C2_ROOT,

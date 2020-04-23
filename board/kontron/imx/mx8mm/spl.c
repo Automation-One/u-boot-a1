@@ -33,8 +33,26 @@ enum {
 	BOARD_TYPE_MAX
 };
 
+#define GPIO_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_ODE | PAD_CTL_PUE | PAD_CTL_PE)
+#define I2C_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_HYS | PAD_CTL_PUE)
 #define UART_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_FSEL1)
 #define WDOG_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_ODE | PAD_CTL_PUE | PAD_CTL_PE)
+
+#define TOUCH_RESET_GPIO	IMX_GPIO_NR(3, 23)
+
+static iomux_v3_cfg_t const i2c1_pads[] = {
+	IMX8MM_PAD_I2C1_SCL_I2C1_SCL | MUX_PAD_CTRL(I2C_PAD_CTRL) | MUX_MODE_SION,
+	IMX8MM_PAD_I2C1_SDA_I2C1_SDA | MUX_PAD_CTRL(I2C_PAD_CTRL) | MUX_MODE_SION
+};
+
+static iomux_v3_cfg_t const i2c2_pads[] = {
+	IMX8MM_PAD_I2C2_SCL_I2C2_SCL | MUX_PAD_CTRL(I2C_PAD_CTRL) | MUX_MODE_SION,
+	IMX8MM_PAD_I2C2_SDA_I2C2_SDA | MUX_PAD_CTRL(I2C_PAD_CTRL) | MUX_MODE_SION
+};
+
+static iomux_v3_cfg_t const touch_gpio[] = {
+	IMX8MM_PAD_SAI5_RXD2_GPIO3_IO23 | MUX_PAD_CTRL(GPIO_PAD_CTRL)
+};
 
 static iomux_v3_cfg_t const uart_pads[] = {
 	IMX8MM_PAD_UART3_RXD_UART3_RX | MUX_PAD_CTRL(UART_PAD_CTRL),
@@ -96,24 +114,6 @@ void spl_dram_init(void)
 
 	printf("Failed to initialize DDR RAM!\n");
 }
-
-#define TOUCH_RESET_GPIO	IMX_GPIO_NR(3, 23)
-#define I2C_PAD_CTRL		(PAD_CTL_DSE6 | PAD_CTL_HYS | PAD_CTL_PUE)
-#define PC 			MUX_PAD_CTRL(I2C_PAD_CTRL) | MUX_MODE_SION
-
-iomux_v3_cfg_t const touch_gpio[] = {
-	IMX8MM_PAD_SAI5_RXD2_GPIO3_IO23 | MUX_PAD_CTRL(WDOG_PAD_CTRL)
-};
-
-iomux_v3_cfg_t const i2c1_pads[] = {
-	IMX8MM_PAD_I2C1_SCL_I2C1_SCL | PC,
-	IMX8MM_PAD_I2C1_SDA_I2C1_SDA | PC
-};
-
-iomux_v3_cfg_t const i2c2_pads[] = {
-	IMX8MM_PAD_I2C2_SCL_I2C2_SCL | PC,
-	IMX8MM_PAD_I2C2_SDA_I2C2_SDA | PC
-};
 
 static void touch_reset(void)
 {

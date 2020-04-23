@@ -36,6 +36,10 @@
 	u-boot,dm-pre-reloc;
 };
 
+&pinctrl_ecspi1 {
+	u-boot,dm-spl;
+};
+
 &pinctrl_uart3 {
 	u-boot,dm-spl;
 	u-boot,dm-pre-reloc;
@@ -54,6 +58,10 @@
 };
 
 &pinctrl_usdhc2 {
+	u-boot,dm-spl;
+};
+
+&ecspi1 {
 	u-boot,dm-spl;
 };
 

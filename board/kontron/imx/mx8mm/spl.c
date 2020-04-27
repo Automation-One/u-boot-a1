@@ -197,11 +197,11 @@ int do_board_detect(void)
 int board_fit_config_name_match(const char *name)
 {
 	if (gd->board_type == BOARD_TYPE_KTN_N8010_REV0_LVDS && is_imx8mm() &&
-	    !strncmp(name, "imx8mm-kontron-n8010-rev0-s-lvds", 27))
+	    !strncmp(name, "imx8mm-kontron-n8010-rev0-s-lvds", 32))
 		return 0;
 
 	if (gd->board_type == BOARD_TYPE_KTN_N8010_REV0 && is_imx8mm() &&
-	    !strncmp(name, "imx8mm-kontron-n8010-rev0-s", 22))
+	    !strncmp(name, "imx8mm-kontron-n8010-rev0-s", 27))
 		return 0;
 
 	if (gd->board_type == BOARD_TYPE_KTN_N8010_LVDS && is_imx8mm() &&

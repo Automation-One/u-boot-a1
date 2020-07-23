@@ -299,26 +299,19 @@ int do_board_detect(void)
 	 * We can use the RAM size detected by the SPL to differentiate
 	 * between the N6x10 (256MB) and the N6x11 (512MB) boards.
 	 */
-	if (gd->ram_size == SZ_512M && is_mx6ul()) {
-		printf("512MB RAM detected, assuming Kontron N6311 S board...\n");
+	if (gd->ram_size == SZ_512M && is_mx6ul())
 		gd->board_type = BOARD_TYPE_KTN_N6311_S;
-	}
-	else if (gd->ram_size == SZ_512M && is_mx6ull()) {
-		printf("512MB RAM detected, assuming Kontron N6411 S board...\n");
+	else if (gd->ram_size == SZ_512M && is_mx6ull())
 		gd->board_type = BOARD_TYPE_KTN_N6411_S;
-	}
-	else if (gd->ram_size == SZ_256M && is_mx6ul()) {
-		printf("256MB RAM detected, assuming Kontron N6310 S board...\n");
+	else if (gd->ram_size == SZ_256M && is_mx6ul())
 		gd->board_type = BOARD_TYPE_KTN_N6310_S;
-	}
-	else if (is_mx6ul()) {
-		printf("Unknown i.MX6UL board detected, using default...\n");
+	else if (is_mx6ul())
 		gd->board_type = BOARD_TYPE_KTN_N631X;
-	}
-	else if (is_mx6ull()) {
-		printf("Unknown i.MX6ULL board detected, using default...\n");
+	else if (is_mx6ull())
 		gd->board_type = BOARD_TYPE_KTN_N641X;
-	}
+
+	printf("Kontron SL i.MX6UL%s (N6%s1x) module, %d MB RAM detected\n",
+	       is_mx6ull() ? "L" : "", is_mx6ull() ? "4" : "3", gd->ram_size / SZ_1M);
 
 	return 0;
 }

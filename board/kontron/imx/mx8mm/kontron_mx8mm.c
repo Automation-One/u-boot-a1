@@ -12,9 +12,9 @@ DECLARE_GLOBAL_DATA_PTR;
 int dram_init(void)
 {
 	/*
-	 * Check the actual DDR RAM size available (max. 2GB).
+	 * Check the actual DDR RAM size available (max. 4GB).
 	 */
-	gd->ram_size = get_ram_size((long int *)PHYS_SDRAM, SZ_2G);
+	gd->ram_size = get_ram_size((long int *)PHYS_SDRAM, SZ_4G);
 
 	/*
 	 * Adjust the memory map to match the actual RAM size.
@@ -52,7 +52,7 @@ int board_early_init_f(void)
  * Try to read the secondary address from MAC1 and MAC2 and adjust the
  * devicetree so Linux can pick up the MAC address.
  */
-int ft_board_setup(void *blob, bd_t *bd)
+int fdt_set_usb_eth_addr(void *blob)
 {
 	u32 value = readl(OCOTP_BASE_ADDR + 0x660);
 	unsigned char mac[6];
@@ -95,6 +95,12 @@ int ft_board_setup(void *blob, bd_t *bd)
 	}
 
 	return 0;
+}
+
+int ft_board_setup(void *blob, bd_t *bd)
+{
+	fdt_set_usb_eth_addr(blob);
+	fdt_fixup_memory(blob, PHYS_SDRAM, gd->ram_size);
 }
 
 int board_init(void)

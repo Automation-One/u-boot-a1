@@ -25,11 +25,8 @@
 DECLARE_GLOBAL_DATA_PTR;
 
 enum {
-	BOARD_TYPE_KTN_N800X = 1,
-	BOARD_TYPE_KTN_N8010_REV0,
-	BOARD_TYPE_KTN_N8010_REV0_LVDS,
-	BOARD_TYPE_KTN_N8010,
-	BOARD_TYPE_KTN_N8010_LVDS,
+	BOARD_TYPE_KTN_N801X,
+	BOARD_TYPE_KTN_N801X_LVDS,
 	BOARD_TYPE_MAX
 };
 
@@ -84,7 +81,7 @@ int spl_board_boot_device(enum boot_device boot_dev_spl)
 void spl_dram_init(void)
 {
 	/*
-	 * Try to init DDR with default config (SMARC)
+	 * Try to init DDR with default config (2GB)
 	 */
 	if (!ddr_init(&dram_timing)) {
 		gd->ram_size = SZ_2G;
@@ -94,7 +91,7 @@ void spl_dram_init(void)
 	/*
 	 * Overwrite some config values in the default DDR
 	 * settings in lpddr4_timing.c to comply with the
-	 * RAM on the SoM. Retry init with these values.
+	 * 1GB RAM on the SoM. Retry init with these values.
 	 */
 	dram_timing.ddrc_cfg[2].val = 0xa1080020;
 	dram_timing.ddrc_cfg[37].val = 0x1f;
@@ -109,6 +106,28 @@ void spl_dram_init(void)
 
 	if (!ddr_init(&dram_timing)) {
 		gd->ram_size = SZ_1G;
+		return;
+	}
+
+	/*
+	 * Last but not least, we might even have 4GB of
+	 * DDR available.
+	 *
+	 * TODO: Add config values for 4GB type.
+	 */
+	dram_timing.ddrc_cfg[2].val = 0xa1080020;
+	dram_timing.ddrc_cfg[37].val = 0x1f;
+	dram_timing.fsp_msg[0].fsp_cfg[9].val = 0x110;
+	dram_timing.fsp_msg[0].fsp_cfg[21].val = 0x1;
+	dram_timing.fsp_msg[1].fsp_cfg[10].val = 0x110;
+	dram_timing.fsp_msg[1].fsp_cfg[22].val = 0x1;
+	dram_timing.fsp_msg[2].fsp_cfg[10].val = 0x110;
+	dram_timing.fsp_msg[2].fsp_cfg[22].val = 0x1;
+	dram_timing.fsp_msg[3].fsp_cfg[10].val = 0x110;
+	dram_timing.fsp_msg[3].fsp_cfg[22].val = 0x1;
+
+	if (!ddr_init(&dram_timing)) {
+		gd->ram_size = SZ_4G;
 		return;
 	}
 
@@ -147,69 +166,48 @@ static int i2c_detect(uint8_t bus, uint16_t addr)
 
 int do_board_detect(void)
 {
+	bool lvds = false;
+	printf("Kontron SL i.MX8MM (N801X) module, %d GB RAM detected\n", gd->ram_size / SZ_1G);
+
 	/*
-	 * We can use the RAM size detected by the SPL to differentiate
-	 * between the different modules.
+	 * Check the I2C touch controller to detect a LVDS panel.
 	 */
-	if (gd->ram_size == SZ_1G) {
-		bool lvds = false;
-		printf("1GB RAM detected, assuming Kontron N8010 module...\n");
+	imx_iomux_v3_setup_multiple_pads(i2c2_pads, ARRAY_SIZE(i2c2_pads));
+	touch_reset();
 
-		/*
-		 * Check the I2C touch controller to detect a LVDS panel.
-		 */
-		imx_iomux_v3_setup_multiple_pads(i2c2_pads, ARRAY_SIZE(i2c2_pads));
-		touch_reset();
-
-		if (i2c_detect(3, 0x5d) == 0) {
-			printf("Touch controller detected, "
-			       "assuming LVDS panel...\n");
-			lvds = true;
-		}
-
-		/*
-		 * Check the I2C PMIC to detect the deprecated SoM with DA9063.
-		 */
-		imx_iomux_v3_setup_multiple_pads(i2c1_pads, ARRAY_SIZE(i2c1_pads));
-
-		if (i2c_detect(2, 0x58) == 0) {
-			printf("### ATTENTION: DEPRECATED SOM REVISION (N8010 Rev0) DETECTED! ###\n");
-			printf("###             PLEASE UPGRADE TO LATEST MODULE               ###\n");
-			if (lvds)
-				gd->board_type = BOARD_TYPE_KTN_N8010_REV0_LVDS;
-			else
-				gd->board_type = BOARD_TYPE_KTN_N8010_REV0;
-		} else {
-			if (lvds)
-				gd->board_type = BOARD_TYPE_KTN_N8010_LVDS;
-			else
-				gd->board_type = BOARD_TYPE_KTN_N8010;
-		}
+	if (i2c_detect(3, 0x5d) == 0) {
+		printf("Touch controller detected, "
+			   "assuming LVDS panel...\n");
+		lvds = true;
 	}
-	else {
-		printf("Unkown board detected, using default...\n");
-		gd->board_type = BOARD_TYPE_KTN_N8010;
+
+	/*
+	 * Check the I2C PMIC to detect the deprecated SoM with DA9063.
+	 */
+	imx_iomux_v3_setup_multiple_pads(i2c1_pads, ARRAY_SIZE(i2c1_pads));
+
+	if (i2c_detect(2, 0x58) == 0) {
+		printf("### ATTENTION: DEPRECATED SOM REVISION (N8010 Rev0) DETECTED! ###\n");
+		printf("###  THIS HW IS NOT SUPPRTED AND BOOTING WILL PROBABLY FAIL   ###\n");
+		printf("###             PLEASE UPGRADE TO LATEST MODULE               ###\n");
 	}
+
+	if (lvds)
+		gd->board_type = BOARD_TYPE_KTN_N801X_LVDS;
+	else
+		gd->board_type = BOARD_TYPE_KTN_N801X;
 
 	return 0;
 }
 
 int board_fit_config_name_match(const char *name)
 {
-	if (gd->board_type == BOARD_TYPE_KTN_N8010_REV0_LVDS && is_imx8mm() &&
-	    !strncmp(name, "imx8mm-kontron-n8010-rev0-s-lvds", 32))
+	if (gd->board_type == BOARD_TYPE_KTN_N801X_LVDS && is_imx8mm() &&
+	    !strncmp(name, "imx8mm-kontron-n801x-s-lvds", 27))
 		return 0;
 
-	if (gd->board_type == BOARD_TYPE_KTN_N8010_REV0 && is_imx8mm() &&
-	    !strncmp(name, "imx8mm-kontron-n8010-rev0-s", 27))
-		return 0;
-
-	if (gd->board_type == BOARD_TYPE_KTN_N8010_LVDS && is_imx8mm() &&
-	    !strncmp(name, "imx8mm-kontron-n8010-s-lvds", 27))
-		return 0;
-
-	if (gd->board_type == BOARD_TYPE_KTN_N8010 && is_imx8mm() &&
-	    !strncmp(name, "imx8mm-kontron-n8010-s", 22))
+	if (gd->board_type == BOARD_TYPE_KTN_N801X && is_imx8mm() &&
+	    !strncmp(name, "imx8mm-kontron-n801x-s", 22))
 		return 0;
 
 	return -1;

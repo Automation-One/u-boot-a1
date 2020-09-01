@@ -78,8 +78,20 @@ int spl_board_boot_device(enum boot_device boot_dev_spl)
 	}
 }
 
+bool check_ram_available(long long unsigned int size)
+{
+	long long unsigned int sz = get_ram_size((long int *)PHYS_SDRAM, size);
+
+	if (sz == size)
+		return true;
+
+	return false;
+}
+
 void spl_dram_init(void)
 {
+	gd->ram_size = 0;
+
 	/*
 	 * Try to init DDR with default config (2GB)
 	 */
@@ -91,10 +103,22 @@ void spl_dram_init(void)
 	/*
 	 * Overwrite some config values in the default DDR
 	 * settings in lpddr4_timing.c to comply with the
-	 * 1GB RAM on the SoM. Retry init with these values.
+	 * Micron DDRs.
 	 */
 	dram_timing.ddrc_cfg[2].val = 0xa1080020;
+	dram_timing.ddrc_cfg[5].val = 0x5b00d2;
+	dram_timing.ddrc_cfg[21].val = 0xd8;
+	dram_timing.ddrc_cfg[34].val = 0x1;
 	dram_timing.ddrc_cfg[37].val = 0x1f;
+	dram_timing.ddrc_cfg[42].val = 0x7070707;
+	dram_timing.ddrc_cfg[57].val = 0xc001c;
+	dram_timing.ddrc_cfg[72].val = 0x1d;
+	dram_timing.ddrc_cfg[81].val = 0x30007;
+	dram_timing.ddrc_cfg[96].val = 0x8;
+
+	dram_timing.ddrphy_cfg[82].val = 0x3;
+	dram_timing.ddrphy_cfg[83].val = 0x3;
+
 	dram_timing.fsp_msg[0].fsp_cfg[9].val = 0x110;
 	dram_timing.fsp_msg[0].fsp_cfg[21].val = 0x1;
 	dram_timing.fsp_msg[1].fsp_cfg[10].val = 0x110;
@@ -105,33 +129,16 @@ void spl_dram_init(void)
 	dram_timing.fsp_msg[3].fsp_cfg[22].val = 0x1;
 
 	if (!ddr_init(&dram_timing)) {
-		gd->ram_size = SZ_1G;
-		return;
+		if (check_ram_available(SZ_4G))
+			gd->ram_size = SZ_4G;
+		else if (check_ram_available(SZ_2G))
+			gd->ram_size = SZ_2G;
+		else if (check_ram_available(SZ_1G))
+			gd->ram_size = SZ_1G;
 	}
 
-	/*
-	 * Last but not least, we might even have 4GB of
-	 * DDR available.
-	 *
-	 * TODO: Add config values for 4GB type.
-	 */
-	dram_timing.ddrc_cfg[2].val = 0xa1080020;
-	dram_timing.ddrc_cfg[37].val = 0x1f;
-	dram_timing.fsp_msg[0].fsp_cfg[9].val = 0x110;
-	dram_timing.fsp_msg[0].fsp_cfg[21].val = 0x1;
-	dram_timing.fsp_msg[1].fsp_cfg[10].val = 0x110;
-	dram_timing.fsp_msg[1].fsp_cfg[22].val = 0x1;
-	dram_timing.fsp_msg[2].fsp_cfg[10].val = 0x110;
-	dram_timing.fsp_msg[2].fsp_cfg[22].val = 0x1;
-	dram_timing.fsp_msg[3].fsp_cfg[10].val = 0x110;
-	dram_timing.fsp_msg[3].fsp_cfg[22].val = 0x1;
-
-	if (!ddr_init(&dram_timing)) {
-		gd->ram_size = SZ_4G;
-		return;
-	}
-
-	printf("Failed to initialize DDR RAM!\n");
+	if (gd->ram_size == 0)
+		printf("Failed to initialize DDR RAM!\n");
 }
 
 static void touch_reset(void)

@@ -93,31 +93,19 @@ void spl_dram_init(void)
 	gd->ram_size = 0;
 
 	/*
-	 * Try to init DDR with default config (2GB)
+	 * Try the default DDR settings in lpddr4_timing.c to
+	 * comply with the Micron 4GB DDR.
 	 */
-	if (!ddr_init(&dram_timing)) {
-		gd->ram_size = SZ_2G;
+	if (!ddr_init(&dram_timing) && check_ram_available(SZ_4G)) {
+		gd->ram_size = SZ_4G;
 		return;
 	}
 
 	/*
-	 * Overwrite some config values in the default DDR
-	 * settings in lpddr4_timing.c to comply with the
-	 * Micron DDRs.
+	 * Overwrite some values to comply with the Micron 1GB/2GB DDRs.
 	 */
 	dram_timing.ddrc_cfg[2].val = 0xa1080020;
-	dram_timing.ddrc_cfg[5].val = 0x5b00d2;
-	dram_timing.ddrc_cfg[21].val = 0xd8;
-	dram_timing.ddrc_cfg[34].val = 0x1;
 	dram_timing.ddrc_cfg[37].val = 0x1f;
-	dram_timing.ddrc_cfg[42].val = 0x7070707;
-	dram_timing.ddrc_cfg[57].val = 0xc001c;
-	dram_timing.ddrc_cfg[72].val = 0x1d;
-	dram_timing.ddrc_cfg[81].val = 0x30007;
-	dram_timing.ddrc_cfg[96].val = 0x8;
-
-	dram_timing.ddrphy_cfg[82].val = 0x3;
-	dram_timing.ddrphy_cfg[83].val = 0x3;
 
 	dram_timing.fsp_msg[0].fsp_cfg[9].val = 0x110;
 	dram_timing.fsp_msg[0].fsp_cfg[21].val = 0x1;
@@ -129,9 +117,7 @@ void spl_dram_init(void)
 	dram_timing.fsp_msg[3].fsp_cfg[22].val = 0x1;
 
 	if (!ddr_init(&dram_timing)) {
-		if (check_ram_available(SZ_4G))
-			gd->ram_size = SZ_4G;
-		else if (check_ram_available(SZ_2G))
+		if (check_ram_available(SZ_2G))
 			gd->ram_size = SZ_2G;
 		else if (check_ram_available(SZ_1G))
 			gd->ram_size = SZ_1G;

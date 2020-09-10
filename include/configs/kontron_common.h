@@ -66,7 +66,7 @@
  * #######################################
  */
 #ifdef CONFIG_FEC_MXC
-#define CONFIG_ETHPRIME			"eth1"
+#define CONFIG_ETHPRIME			"eth0"
 #else
 #define CONFIG_ETHPRIME
 #endif
@@ -90,7 +90,7 @@
  */
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"bootargs_base=" KONTRON_ENV_KERNEL_MTDPARTS " " \
-			 KONTRON_ENV_KERNEL_CONSOLE " \0" \
+			 KONTRON_ENV_KERNEL_CONSOLE "\0" \
 	"script=boot.scr\0" \
 	"fdt_high=0xffffffff\0" \
 	"initrd_high=0xffffffff\0" \
@@ -109,16 +109,6 @@
 	"hostname=" CONFIG_HOSTNAME "\0" \
 	"bootubipart=spi-nand0\0" \
 	"bootubivol=boot\0" \
-	"bootdelay=0\0" \
-	"ethaddr=22:33:44:44:33:22\0" \
-	"nfsroot=/nfsroot\0" \
-	"netargs=setenv bootargs root=/dev/nfs rw video=HDMI-A-1:1280x720 " \
-	"ip=192.168.1.11:192.168.1.10:192.168.1.10:255.255.255.0:n8010:eth1:any: nfsroot=192.168.1.10:${nfsroot},v3,tcp\0" \
-	"bootcmd=run netargs; tftp 0x82000000 fitImage; bootm 0x82000000#conf@imx6ull-kontron-n6411-s.dtb"
-//	"ip=192.168.1.11:192.168.1.10:192.168.1.10:255.255.255.0:n8010:eth1:any: nfsroot=192.168.1.10:${nfsroot},v3,tcp\0" \
-//	"bootcmd=run netargs; tftp 0x82000000 fitImage; bootm 0x82000000#conf@imx6ul-kontron-n6310-s.dtb"
-//	"bootcmd=run netargs; tftp 0x43000000 fitImage; bootm 0x43000000#conf@freescale_imx8mm-kontron-n8010-s-lvds.dtb"
-//	"bootcmd=bootm 0x43000000#conf@freescale_imx8mm-kontron-n8011-s.dtb\0"
-//	BOOTENV
+	BOOTENV
 
 #endif /* __KONTRON_COMMON_CONFIG_H */

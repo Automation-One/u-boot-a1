@@ -88,9 +88,12 @@ int fdt_set_usb_eth_addr(void *blob)
 		return 0;
 	}
 
-	ret = fdt_setprop(blob, node, "mac-address", &mac, 6);
+	ret = fdt_setprop(blob, node, "local-mac-address", &mac, 6);
+	if (ret)
+		ret = fdt_setprop(blob, node, "mac-address", &mac, 6);
+
 	if (ret) {
-		printf("Missing mac-address property in dt, "
+		printf("Missing mac-address or local-mac-addresss property in dt, "
 		       "skip setting MAC address for USB ethernet\n");
 	}
 

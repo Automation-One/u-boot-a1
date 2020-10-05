@@ -9,18 +9,9 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-int dram_init(void)
+int board_phys_sdram_size(phys_size_t *sdram_size)
 {
-	/*
-	 * Check the actual DDR RAM size available (max. 4GB).
-	 */
-	gd->ram_size = get_ram_size((long int *)PHYS_SDRAM, SZ_4G);
-
-	/*
-	 * Adjust the memory map to match the actual RAM size.
-	 */
-	mem_map[5].size = gd->ram_size;
-
+	*sdram_size = get_ram_size((long int *)PHYS_SDRAM, (SZ_4G + SZ_4G));
 	return 0;
 }
 

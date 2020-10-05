@@ -78,9 +78,9 @@ int spl_board_boot_device(enum boot_device boot_dev_spl)
 	}
 }
 
-bool check_ram_available(long long unsigned int size)
+bool check_ram_available(long int size)
 {
-	long long unsigned int sz = get_ram_size((long int *)PHYS_SDRAM, size);
+	long int sz = get_ram_size((long int *)PHYS_SDRAM, size);
 
 	if (sz == size)
 		return true;

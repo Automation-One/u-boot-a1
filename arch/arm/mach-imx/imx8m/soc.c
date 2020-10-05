@@ -189,24 +189,28 @@ __weak int board_phys_sdram_size(phys_size_t *size)
 
 int dram_init(void)
 {
-	phys_size_t sdram_size;
+	phys_size_t sdram_size, bank1_size;
 	int ret;
 
 	ret = board_phys_sdram_size(&sdram_size);
 	if (ret)
 		return ret;
 
+	/* limit to size of first bank */
+	bank1_size = min(sdram_size, PHYS_SDRAM_SIZE);
+
 	/* rom_pointer[1] contains the size of TEE occupies */
 	if (rom_pointer[1])
-		gd->ram_size = sdram_size - rom_pointer[1];
+		gd->ram_size = bank1_size - rom_pointer[1];
 	else
-		gd->ram_size = sdram_size;
+		gd->ram_size = bank1_size;
 
 	/* also update the SDRAM size in the mem_map used externally */
-	imx8m_mem_map[5].size = sdram_size;
+	imx8m_mem_map[5].size = bank1_size;
 
 #ifdef PHYS_SDRAM_2_SIZE
-	gd->ram_size += PHYS_SDRAM_2_SIZE;
+	gd->ram_size += sdram_size - bank1_size;
+	imx8m_mem_map[6].size = sdram_size - bank1_size;
 #endif
 
 	return 0;
@@ -239,7 +243,7 @@ int dram_init_banksize(void)
 				sdram_size - gd->bd->bi_dram[bank].start;
 		}
 	} else {
-		gd->bd->bi_dram[bank].size = sdram_size;
+		gd->bd->bi_dram[bank].size = min(sdram_size, PHYS_SDRAM_SIZE);
 	}
 
 #ifdef PHYS_SDRAM_2_SIZE
@@ -248,7 +252,7 @@ int dram_init_banksize(void)
 		return -1;
 	}
 	gd->bd->bi_dram[bank].start = PHYS_SDRAM_2;
-	gd->bd->bi_dram[bank].size = PHYS_SDRAM_2_SIZE;
+	gd->bd->bi_dram[bank].size = sdram_size > PHYS_SDRAM_SIZE ? (sdram_size - PHYS_SDRAM_SIZE):0;
 #endif
 
 	return 0;
@@ -261,7 +265,10 @@ phys_size_t get_effective_memsize(void)
 		return ((phys_addr_t)rom_pointer[0] - PHYS_SDRAM);
 
 #ifdef PHYS_SDRAM_2_SIZE
-	return gd->ram_size - PHYS_SDRAM_2_SIZE;
+	if (gd->ram_size > PHYS_SDRAM_SIZE)
+		return PHYS_SDRAM_SIZE;
+	else
+		return gd->ram_size;
 #else
 	return gd->ram_size;
 #endif

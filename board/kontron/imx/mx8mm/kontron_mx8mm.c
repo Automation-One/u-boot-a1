@@ -93,8 +93,11 @@ int fdt_set_usb_eth_addr(void *blob)
 
 int ft_board_setup(void *blob, bd_t *bd)
 {
-	fdt_set_usb_eth_addr(blob);
-	fdt_fixup_memory(blob, PHYS_SDRAM, gd->ram_size);
+	int ret = fdt_set_usb_eth_addr(blob);
+	if (ret)
+		return ret;
+
+	return fdt_fixup_memory(blob, PHYS_SDRAM, gd->ram_size);
 }
 
 int board_init(void)

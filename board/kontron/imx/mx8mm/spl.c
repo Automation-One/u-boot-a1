@@ -168,7 +168,7 @@ int do_board_detect(void)
 	imx_iomux_v3_setup_multiple_pads(i2c2_pads, ARRAY_SIZE(i2c2_pads));
 	touch_reset();
 
-	if (i2c_detect(3, 0x5d) == 0) {
+	if (i2c_detect(1, 0x5d) == 0) {
 		printf("Touch controller detected, "
 			   "assuming LVDS panel...\n");
 		lvds = true;

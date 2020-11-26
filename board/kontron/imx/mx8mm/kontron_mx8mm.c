@@ -9,18 +9,9 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-int dram_init(void)
+int board_phys_sdram_size(phys_size_t *sdram_size)
 {
-	/*
-	 * Check the actual DDR RAM size available (max. 4GB).
-	 */
-	gd->ram_size = get_ram_size((long int *)PHYS_SDRAM, SZ_4G);
-
-	/*
-	 * Adjust the memory map to match the actual RAM size.
-	 */
-	mem_map[5].size = gd->ram_size;
-
+	*sdram_size = get_ram_size((long int *)PHYS_SDRAM, (SZ_4G + SZ_4G));
 	return 0;
 }
 
@@ -88,9 +79,12 @@ int fdt_set_usb_eth_addr(void *blob)
 		return 0;
 	}
 
-	ret = fdt_setprop(blob, node, "mac-address", &mac, 6);
+	ret = fdt_setprop(blob, node, "local-mac-address", &mac, 6);
+	if (ret)
+		ret = fdt_setprop(blob, node, "mac-address", &mac, 6);
+
 	if (ret) {
-		printf("Missing mac-address property in dt, "
+		printf("Missing mac-address or local-mac-addresss property in dt, "
 		       "skip setting MAC address for USB ethernet\n");
 	}
 
@@ -99,8 +93,11 @@ int fdt_set_usb_eth_addr(void *blob)
 
 int ft_board_setup(void *blob, bd_t *bd)
 {
-	fdt_set_usb_eth_addr(blob);
-	fdt_fixup_memory(blob, PHYS_SDRAM, gd->ram_size);
+	int ret = fdt_set_usb_eth_addr(blob);
+	if (ret)
+		return ret;
+
+	return fdt_fixup_memory(blob, PHYS_SDRAM, gd->ram_size);
 }
 
 int board_init(void)

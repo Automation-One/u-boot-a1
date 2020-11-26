@@ -78,60 +78,53 @@ int spl_board_boot_device(enum boot_device boot_dev_spl)
 	}
 }
 
+bool check_ram_available(long int size)
+{
+	long int sz = get_ram_size((long int *)PHYS_SDRAM, size);
+
+	if (sz == size)
+		return true;
+
+	return false;
+}
+
 void spl_dram_init(void)
 {
-	/*
-	 * Try to init DDR with default config (2GB)
-	 */
-	if (!ddr_init(&dram_timing)) {
-		gd->ram_size = SZ_2G;
-		return;
-	}
+	gd->ram_size = 0;
 
 	/*
-	 * Overwrite some config values in the default DDR
-	 * settings in lpddr4_timing.c to comply with the
-	 * 1GB RAM on the SoM. Retry init with these values.
+	 * Try the default DDR settings in lpddr4_timing.c to
+	 * comply with the Micron 4GB DDR.
 	 */
-	dram_timing.ddrc_cfg[2].val = 0xa1080020;
-	dram_timing.ddrc_cfg[37].val = 0x1f;
-	dram_timing.fsp_msg[0].fsp_cfg[9].val = 0x110;
-	dram_timing.fsp_msg[0].fsp_cfg[21].val = 0x1;
-	dram_timing.fsp_msg[1].fsp_cfg[10].val = 0x110;
-	dram_timing.fsp_msg[1].fsp_cfg[22].val = 0x1;
-	dram_timing.fsp_msg[2].fsp_cfg[10].val = 0x110;
-	dram_timing.fsp_msg[2].fsp_cfg[22].val = 0x1;
-	dram_timing.fsp_msg[3].fsp_cfg[10].val = 0x110;
-	dram_timing.fsp_msg[3].fsp_cfg[22].val = 0x1;
-
-	if (!ddr_init(&dram_timing)) {
-		gd->ram_size = SZ_1G;
-		return;
-	}
-
-	/*
-	 * Last but not least, we might even have 4GB of
-	 * DDR available.
-	 *
-	 * TODO: Add config values for 4GB type.
-	 */
-	dram_timing.ddrc_cfg[2].val = 0xa1080020;
-	dram_timing.ddrc_cfg[37].val = 0x1f;
-	dram_timing.fsp_msg[0].fsp_cfg[9].val = 0x110;
-	dram_timing.fsp_msg[0].fsp_cfg[21].val = 0x1;
-	dram_timing.fsp_msg[1].fsp_cfg[10].val = 0x110;
-	dram_timing.fsp_msg[1].fsp_cfg[22].val = 0x1;
-	dram_timing.fsp_msg[2].fsp_cfg[10].val = 0x110;
-	dram_timing.fsp_msg[2].fsp_cfg[22].val = 0x1;
-	dram_timing.fsp_msg[3].fsp_cfg[10].val = 0x110;
-	dram_timing.fsp_msg[3].fsp_cfg[22].val = 0x1;
-
-	if (!ddr_init(&dram_timing)) {
+	if (!ddr_init(&dram_timing) && check_ram_available(SZ_4G)) {
 		gd->ram_size = SZ_4G;
 		return;
 	}
 
-	printf("Failed to initialize DDR RAM!\n");
+	/*
+	 * Overwrite some values to comply with the Micron 1GB/2GB DDRs.
+	 */
+	dram_timing.ddrc_cfg[2].val = 0xa1080020;
+	dram_timing.ddrc_cfg[37].val = 0x1f;
+
+	dram_timing.fsp_msg[0].fsp_cfg[9].val = 0x110;
+	dram_timing.fsp_msg[0].fsp_cfg[21].val = 0x1;
+	dram_timing.fsp_msg[1].fsp_cfg[10].val = 0x110;
+	dram_timing.fsp_msg[1].fsp_cfg[22].val = 0x1;
+	dram_timing.fsp_msg[2].fsp_cfg[10].val = 0x110;
+	dram_timing.fsp_msg[2].fsp_cfg[22].val = 0x1;
+	dram_timing.fsp_msg[3].fsp_cfg[10].val = 0x110;
+	dram_timing.fsp_msg[3].fsp_cfg[22].val = 0x1;
+
+	if (!ddr_init(&dram_timing)) {
+		if (check_ram_available(SZ_2G))
+			gd->ram_size = SZ_2G;
+		else if (check_ram_available(SZ_1G))
+			gd->ram_size = SZ_1G;
+	}
+
+	if (gd->ram_size == 0)
+		printf("Failed to initialize DDR RAM!\n");
 }
 
 static void touch_reset(void)
@@ -175,7 +168,7 @@ int do_board_detect(void)
 	imx_iomux_v3_setup_multiple_pads(i2c2_pads, ARRAY_SIZE(i2c2_pads));
 	touch_reset();
 
-	if (i2c_detect(3, 0x5d) == 0) {
+	if (i2c_detect(1, 0x5d) == 0) {
 		printf("Touch controller detected, "
 			   "assuming LVDS panel...\n");
 		lvds = true;

@@ -22,11 +22,24 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+#define MODEM_ONOFF IMX_GPIO_NR(1, 31)
+
+#define MODEM_VBAT_EN IMX_GPIO_NR(1, 30)
+
+
 int dram_init(void)
 {
 	gd->ram_size = imx_ddr_size();
 
 	return 0;
+}
+
+static void setup_modem(void) {
+	gpio_request(MODEM_VBAT_EN, "modem_vbat_en");
+	gpio_direction_output(MODEM_VBAT_EN, 1);
+
+	gpio_request(MODEM_ONOFF, "modem_onoff");
+	gpio_direction_output(MODEM_ONOFF, 1);
 }
 
 static int setup_fec(void)
@@ -82,6 +95,7 @@ int board_init(void)
 	gd->bd->bi_boot_params = PHYS_SDRAM + 0x100;
 
 	setup_fec();
+    setup_modem();
 
 	return 0;
 }

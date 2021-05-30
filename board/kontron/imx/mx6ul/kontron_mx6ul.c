@@ -99,3 +99,16 @@ int board_init(void)
 
 	return 0;
 }
+
+int board_late_init(void)
+{
+	unsigned char eth1addr[6];
+
+	/* Get the MAC address for the second Ethernet port */
+	imx_get_mac_from_fuse(1, eth1addr);
+
+	if (!env_get("eth1addr") && is_valid_ethaddr(eth1addr))
+		eth_env_set_enetaddr("eth1addr", eth1addr);
+
+	return 0;
+}

@@ -3,6 +3,12 @@
 # (C) Copyright 2000 - 2013
 # Wolfgang Denk, DENX Software Engineering, wd@denx.de.
 
+DEPRECATED:
+===========
+
+This repository is now Depricated. For all AutomationOne Projects we now use mainline u-boot with a patchstack in the meta-a1-{platform,extras} repos.
+
+
 Summary:
 ========
 
